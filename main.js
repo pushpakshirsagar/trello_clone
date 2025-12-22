@@ -35,14 +35,34 @@ window.onload = function () {
         draggedCard = null;
     };
 
-    const allowDrop = (e) => {
-        e.preventDefault();
-    };
+    const getDragAfterElement = (container, y) => {
+        const draggableElements = [
+            ...container.querySelectorAll('.card-data:not(.dragging)')
+        ];
 
-    const dropHandler = (e) => {
+        return draggableElements.reduce((closest, child) => {
+            const box = child.getBoundingClientRect();
+            const offset = y - box.top - box.height / 2;
+
+            if (offset < 0 && offset > closest.offset) {
+                return { offset, element: child };
+            } else {
+                return closest;
+            }
+        }, { offset: Number.NEGATIVE_INFINITY }).element;
+    };
+    const dragOverHandler = (e) => {
         e.preventDefault();
-        if (draggedCard) {
-            e.currentTarget.appendChild(draggedCard);
+
+        const container = e.currentTarget;
+        const afterElement = getDragAfterElement(container, e.clientY);
+
+        if (!draggedCard) return;
+
+        if (afterElement == null) {
+            container.appendChild(draggedCard);
+        } else {
+            container.insertBefore(draggedCard, afterElement);
         }
     };
 
@@ -65,8 +85,8 @@ window.onload = function () {
         card.innerHTML = cardHtml;
 
         let contentArea = card.querySelector('.card-content');
-        contentArea.addEventListener('dragover', allowDrop);
-        contentArea.addEventListener('drop', dropHandler);
+        contentArea.addEventListener('dragover', dragOverHandler);
+
         contentArea.scrollTop = contentArea.scrollHeight;
         let addCard = document.createElement('button');
         addCard.textContent = '+ add a card';

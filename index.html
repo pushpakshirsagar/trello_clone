@@ -21,11 +21,12 @@
     <div class="modal-content">
         <h3>Add A Task Card</h3>
 
-        <input id="card_title" placeholder="Title" />
+        <input type="text" id="card_title" placeholder="Title" />
         <textarea id="card_desc" placeholder="Description"></textarea>
-
-        <button id="saveCard">Save</button>
-        <button onclick="closeModal()">Cancel</button>
+        <div class="actions">
+        <button class="btn" id="saveCard">Save</button>
+        <button class="btn" onclick="closeModal()">Cancel</button>
+        </div>
     </div>
 </div>
     </main>

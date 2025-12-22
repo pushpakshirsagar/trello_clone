@@ -57,8 +57,13 @@ button{
     font-size: 1rem;
     font-weight: 600;
 }
+.card-details{
+    display: flex;
+    flex-direction: column;
+}
 .card-header-text{
     font-weight: bold;
+    font-size: 1.25rem;
 }
 .card-header-right{
     display: flex;
@@ -74,8 +79,39 @@ button{
 }
 .card-data{
     background-color: white;
-    min-height: 7rem;
+    min-height: 5rem;
     border-radius: 1rem;
+    padding: 0.5rem;
+    display: flex;
+    justify-content: space-between;
+}
+.task-edit{
+    display: flex;
+}
+.card-title{
+    font-size: 1rem;
+    font-weight: 600;
+    margin-bottom: 0.25rem;
+}
+.card-description{
+    font-size: 0.75rem;
+}
+.hide {
+    visibility: hidden;
+}
+.modal {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,.4);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.modal-content {
+    background: #fff;
+    padding: 16px;
+    width: 300px;
+    border-radius: 6px;
 }
 
 @media (max-width: 768px) {

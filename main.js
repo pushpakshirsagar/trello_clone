@@ -15,18 +15,27 @@ let trelloCardDetails = [
 
 let draggedCard = null;
 let activeColumnId = null;
-
-const updateTrelloDetailsObj = (taskDetails) => {
+let editTaskId = null;
+const updateTrelloDetailsObj = (taskDetails,edit=false) => {
     trelloCardDetails = trelloCardDetails.map(col => {
         if (col.id === activeColumnId) {
             return {
                 ...col,
-                tasks: [...(col.tasks || []), taskDetails],
+                tasks:col.tasks?.map((task)=>{
+                    if(task.id === taskDetails.id && edit){
+                        return {...task, title: taskDetails.title, descriptin: taskDetails.descriptin}
+                    }
+                    else{
+                        [...(col.tasks || []), taskDetails]
+                    }
+                }) || [...(col.tasks || []), taskDetails] ,
                 totalCard: (col.totalCard || 0) + 1
             };
         }
         return col;
     });
+    console.log(trelloCardDetails)
+    localStorage.setItem('trelloCardDetails',JSON.stringify(trelloCardDetails))
 }
 window.onload = function () {
 
@@ -36,10 +45,23 @@ window.onload = function () {
         let taskName = document.getElementById('card_title').value;
         let taskDesc = document.getElementById('card_desc').value;
         let taskDetails = { id: cardCnt, title: taskName, descriptin: taskDesc }
+
+        if(editTaskId !== null){
+            taskDetails = { id: editTaskId, title: taskName, descriptin: taskDesc }
+            updateTrelloDetailsObj(taskDetails,true);
+              const card = document.querySelector(`[data-task-id='${editTaskId}']`);
+            if (card) {
+                card.querySelector('.card-title').textContent = taskName;
+                card.querySelector('.card-description').textContent = taskDesc;
+            }
+            editTaskId=null;
+        }else{
         updateTrelloDetailsObj(taskDetails);
         card = createCard(taskDetails, activeColumnId)
         cardContainer.appendChild(card);
         cardContainer.scrollTop = cardContainer.scrollHeight;
+        }
+       
         document.getElementById('card_title').value='';
         document.getElementById('card_desc').value='';
         document.getElementById('card_modal').classList.add('hide');
@@ -47,7 +69,8 @@ window.onload = function () {
 
     const createCard = (t, colId) => {
         let card = document.createElement('div');
-        let cardTextContent = `<div class='card-details'><div class='card-title'>${t.title}</div><div class='card-description'>${t.descriptin}</div></div><button class='task-edit'>...</button>`
+        let cardTextContent = `<div class='card-details'><div class='card-title' id=${colId}${t.id}title>${t.title}</div><div class='card-description' id=${colId}${t.id}desc>${t.descriptin}</div></div><button class='task-edit'><i class="fa fa-pencil" aria-hidden="true"></i>
+</button>`
         card.dataset.taskId = t.id;
         card.dataset.columnId = colId;
         card.innerHTML = cardTextContent;
@@ -57,10 +80,14 @@ window.onload = function () {
         card.addEventListener('dragstart', dragStartHandler);
         card.addEventListener('dragend', dragEndHandler);
         card.querySelector('.task-edit').addEventListener('click',()=>{
-            console.log(t.id,colId)
             activeColumnId=colId;
-            document.getElementById('card_title').value = t.title;
-            document.getElementById('card_desc').value = t.descriptin;
+            editTaskId = t.id;
+            let trellodata = JSON.parse(localStorage.getItem('trelloCardDetails'));
+            const taskData = trellodata.find(column => column.id === activeColumnId)?.tasks.find(task => task.id === t.id);
+            console.log(taskData);
+            
+            document.getElementById('card_title').value = taskData.title;
+            document.getElementById('card_desc').value = taskData.descriptin;
             document.getElementById('card_modal').classList.remove('hide');
 
         })
@@ -166,8 +193,8 @@ window.onload = function () {
     };
 
     let columnContainer = document.getElementById("columnContainer");
-
-    trelloCardDetails.map((obj) => {
+    let trellodata = JSON.parse(localStorage.getItem('trelloCardDetails'));
+    trellodata.map((obj) => {
         let card = document.createElement('div');
         card.classList.add('card');
 
@@ -207,4 +234,3 @@ const closeModal = () => {
     document.getElementById('card_modal').classList.add('hide');
 }
 
-console.log(JSON.stringify(trelloCardDetails))

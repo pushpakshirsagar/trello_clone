@@ -99,6 +99,8 @@ window.onload = function () {
     };
 
  const dragStartHandler = (e) => {
+    console.log('start');
+    
     draggedCard = e.target;
 
     draggedCard.dataset.sourceColumnId =
@@ -137,17 +139,21 @@ window.onload = function () {
         e.currentTarget.id.replace('listCardContent', '')
     );
     if (!draggedCard) return;
-    if (sourceColumnId === targetColumnId) return;
+    // if (sourceColumnId === targetColumnId) return;
 
     const taskId = Number(draggedCard.dataset.taskId);
     const sourceColumnId = Number(draggedCard.dataset.columnId);
-    updateTrelloOnDrag(taskId, sourceColumnId, targetColumnId);
     draggedCard.dataset.columnId = targetColumnId;
+
+    updateTrelloOnDrag(taskId, sourceColumnId, targetColumnId);
 };
 
     const updateTrelloOnDrag = (taskId, fromColId, toColId) => {
     let movedTask = null;
-    trelloCardDetails = trelloCardDetails.map(col => {
+
+    console.log(taskId,fromColId,toColId);
+    
+    let newtrelloCardDetails = trelloCardDetails.map(col => {
         if (col.id === fromColId) {
             const remainTasks = (col.tasks || []).filter(t => {
                 if (t.id === taskId) {
@@ -159,7 +165,7 @@ window.onload = function () {
 
             return {
                 ...col,
-                tasks: remainTasks,
+                tasks: remainTasks || [],
                 totalCard: remainTasks.length
             };
         }
@@ -174,6 +180,9 @@ window.onload = function () {
 
         return col;
     });
+
+    console.log(newtrelloCardDetails)
+    localStorage.setItem('trelloCardDetails',JSON.stringify(newtrelloCardDetails))
 };
 
 
@@ -194,6 +203,7 @@ window.onload = function () {
 
     let columnContainer = document.getElementById("columnContainer");
     let trellodata = JSON.parse(localStorage.getItem('trelloCardDetails'));
+    if(!trellodata) trellodata = trelloCardDetails;
     trellodata.map((obj) => {
         let card = document.createElement('div');
         card.classList.add('card');

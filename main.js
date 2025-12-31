@@ -3,7 +3,7 @@ let trelloCardDetails = [
         id: 1, columnStatus: "To Do", totalCard: 2,
         tasks: [
             {
-                id: 1,
+                id: 232133123,
                 title: 'functionality one',
                 descriptin: 'Test'
             }
@@ -17,39 +17,41 @@ let draggedCard = null;
 let activeColumnId = null;
 let editTaskId = null;
 const updateTrelloDetailsObj = (taskDetails,edit=false) => {
-    trelloCardDetails = trelloCardDetails.map(col => {
-        if (col.id === activeColumnId) {
+    let trellodata = JSON.parse(localStorage.getItem('trelloCardDetails'))||trelloCardDetails;
+     let newtrelloCardDetails = trellodata.map(col => {
+        if (col.id !== activeColumnId) return col;
+        if (edit) {
             return {
                 ...col,
-                tasks:col.tasks?.map((task)=>{
-                    if(task.id === taskDetails.id && edit){
-                        return {...task, title: taskDetails.title, descriptin: taskDetails.descriptin}
-                    }
-                    else{
-                        [...(col.tasks || []), taskDetails]
-                    }
-                }) || [...(col.tasks || []), taskDetails] ,
-                totalCard: (col.totalCard || 0) + 1
+                tasks: col.tasks.map(task =>
+                    task.id === taskDetails.id
+                        ? { ...task, title: taskDetails.title, descriptin: taskDetails.descriptin }
+                        : task
+                )
             };
         }
-        return col;
+        return {
+            ...col,
+            tasks: [...(col.tasks || []), taskDetails],
+            totalCard: (col.totalCard || 0) + 1
+        };
     });
-    console.log(trelloCardDetails)
-    localStorage.setItem('trelloCardDetails',JSON.stringify(trelloCardDetails))
+    localStorage.setItem('trelloCardDetails',JSON.stringify(newtrelloCardDetails))
 }
 window.onload = function () {
 
     document.getElementById('saveCard').addEventListener('click', () => {
         let cardContainer = document.getElementById('listCardContent' + activeColumnId);
-        let cardCnt = cardContainer.getElementsByClassName('card-data').length;
         let taskName = document.getElementById('card_title').value;
         let taskDesc = document.getElementById('card_desc').value;
-        let taskDetails = { id: cardCnt, title: taskName, descriptin: taskDesc }
-
+        let taskDetails = { id: new Date().getTime(), title: taskName, descriptin: taskDesc }
+        console.log('edittaskid',editTaskId, activeColumnId);
         if(editTaskId !== null){
             taskDetails = { id: editTaskId, title: taskName, descriptin: taskDesc }
             updateTrelloDetailsObj(taskDetails,true);
-              const card = document.querySelector(`[data-task-id='${editTaskId}']`);
+              const card = document.querySelector(`[data-task-id='${editTaskId}'][data-column-id='${activeColumnId}']`);
+              console.log('card',card);
+              
             if (card) {
                 card.querySelector('.card-title').textContent = taskName;
                 card.querySelector('.card-description').textContent = taskDesc;
@@ -79,18 +81,7 @@ window.onload = function () {
 
         card.addEventListener('dragstart', dragStartHandler);
         card.addEventListener('dragend', dragEndHandler);
-        card.querySelector('.task-edit').addEventListener('click',()=>{
-            activeColumnId=colId;
-            editTaskId = t.id;
-            let trellodata = JSON.parse(localStorage.getItem('trelloCardDetails'));
-            const taskData = trellodata.find(column => column.id === activeColumnId)?.tasks.find(task => task.id === t.id);
-            console.log(taskData);
-            
-            document.getElementById('card_title').value = taskData.title;
-            document.getElementById('card_desc').value = taskData.descriptin;
-            document.getElementById('card_modal').classList.remove('hide');
-
-        })
+        card.querySelector('.task-edit').addEventListener('click',editTaskHandler)
         return card;
     }
     const addCardToColumn = (colId) => {
@@ -139,21 +130,23 @@ window.onload = function () {
         e.currentTarget.id.replace('listCardContent', '')
     );
     if (!draggedCard) return;
-    // if (sourceColumnId === targetColumnId) return;
 
     const taskId = Number(draggedCard.dataset.taskId);
     const sourceColumnId = Number(draggedCard.dataset.columnId);
     draggedCard.dataset.columnId = targetColumnId;
-
+    // activeColumnId= targetColumnId
+    
     updateTrelloOnDrag(taskId, sourceColumnId, targetColumnId);
+    
 };
 
     const updateTrelloOnDrag = (taskId, fromColId, toColId) => {
     let movedTask = null;
-
-    console.log(taskId,fromColId,toColId);
+console.log('adas',taskId,fromColId, toColId);
+    let trellodata = JSON.parse(localStorage.getItem('trelloCardDetails')) || trelloCardDetails;
+    console.log(trellodata);
     
-    let newtrelloCardDetails = trelloCardDetails.map(col => {
+    let newtrelloCardDetails = trellodata.map(col => {
         if (col.id === fromColId) {
             const remainTasks = (col.tasks || []).filter(t => {
                 if (t.id === taskId) {
@@ -170,21 +163,50 @@ window.onload = function () {
             };
         }
 
-        if (col.id === toColId) {
+        return col;
+    });
+
+    if(movedTask){
+        newtrelloCardDetails = newtrelloCardDetails.map(col => {
+              if (col.id === toColId ) {
+            console.log('addrttsa',col.tasks,movedTask);
+            
             return {
                 ...col,
                 tasks: [...(col.tasks || []), movedTask],
                 totalCard: (col.totalCard || 0) + 1
             };
         }
-
-        return col;
-    });
-
-    console.log(newtrelloCardDetails)
+        return col
+        });
+    }
+    console.log('new',movedTask,newtrelloCardDetails);
+    
     localStorage.setItem('trelloCardDetails',JSON.stringify(newtrelloCardDetails))
+    document.querySelectorAll(`[data-column-id='${toColId}'] .task-edit`).forEach((editButton) => {
+        editButton.addEventListener('click', editTaskHandler);
+    });
 };
 
+const editTaskHandler = (e) => {
+    const taskId = e.target.closest('.card-data').dataset.taskId;
+    const colId = e.target.closest('.card-data').dataset.columnId;
+
+    activeColumnId = colId;
+    editTaskId = taskId;
+
+    console.log(editTaskId,activeColumnId);
+    
+    let trellodata = JSON.parse(localStorage.getItem('trelloCardDetails'))||trelloCardDetails;
+    
+    const taskData = trellodata.find(column => column.id == colId)?.tasks.find(task => task.id == taskId);
+    console.log('taskdata',taskData);
+    
+
+    document.getElementById('card_title').value = taskData.title;
+    document.getElementById('card_desc').value = taskData.descriptin;
+    document.getElementById('card_modal').classList.remove('hide');
+};
 
     const dragOverHandler = (e) => {
         e.preventDefault();

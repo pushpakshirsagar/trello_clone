@@ -13,7 +13,7 @@ input[type=text],
 textarea {
     width: 100%;
     padding: 12px;
-    margin: 8px 0;
+    margin: 8px 0 0 0;
     display: inline-block;
     border: 1px solid #ccc;
     border-radius: 4px;
@@ -32,6 +32,18 @@ textarea {
     display: flex;
     justify-content: right;
     gap: 0.5rem;
+}
+.error{
+    font-size: 0.7rem;
+    color: red;
+    padding: 0 5px;
+}
+
+.form-row{
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-bottom: 10px;
 }
 
 .trello-header {

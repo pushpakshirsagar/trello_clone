@@ -38,16 +38,38 @@ const updateTrelloDetailsObj = (taskDetails,edit=false) => {
     });
     localStorage.setItem('trelloCardDetails',JSON.stringify(newtrelloCardDetails))
 }
+
+const validateData =(data) =>{
+    let isValid = true;
+    if(data.title === ''){
+        isValid=false;
+        document.getElementById('nameError').classList.remove('hide')
+    }
+    if(data.descriptin === '' ){
+        isValid=false;
+        document.getElementById('descError').classList.remove('hide')
+    }
+    return isValid;
+}
 window.onload = function () {
+    
+    document.querySelectorAll('.inputarea').forEach(inputElement => {
+        inputElement.addEventListener('input', () => {
+            const errorElement = inputElement.nextElementSibling;
+            if (errorElement && errorElement.classList.contains('error')) {
+                errorElement.classList.add('hide');
+            }
+        });
+    });
 
     document.getElementById('saveCard').addEventListener('click', () => {
         let cardContainer = document.getElementById('listCardContent' + activeColumnId);
         let taskName = document.getElementById('card_title').value;
         let taskDesc = document.getElementById('card_desc').value;
         let taskDetails = { id: new Date().getTime(), title: taskName, descriptin: taskDesc }
-        console.log('edittaskid',editTaskId, activeColumnId);
+        if(validateData(taskDetails)){
         if(editTaskId !== null){
-            taskDetails = { id: editTaskId, title: taskName, descriptin: taskDesc }
+            taskDetails = {...taskDetails, id: editTaskId }
             updateTrelloDetailsObj(taskDetails,true);
               const card = document.querySelector(`[data-task-id='${editTaskId}'][data-column-id='${activeColumnId}']`);
               console.log('card',card);
@@ -67,6 +89,8 @@ window.onload = function () {
         document.getElementById('card_title').value='';
         document.getElementById('card_desc').value='';
         document.getElementById('card_modal').classList.add('hide');
+        }
+        
     });
 
     const createCard = (t, colId) => {
